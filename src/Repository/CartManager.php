@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Raketa\BackendTestTask\Repository;
 
@@ -11,42 +11,42 @@ use Raketa\BackendTestTask\Infrastructure\ConnectorFacade;
 
 class CartManager extends ConnectorFacade
 {
-    public $logger;
+    private LoggerInterface $logger;
 
-    public function __construct($host, $port, $password)
+    public function __construct(string $host, int $port, ?string $password, LoggerInterface $logger)
     {
         parent::__construct($host, $port, $password, 1);
-        parent::build();
-    }
-
-    public function setLogger(LoggerInterface $logger)
-    {
         $this->logger = $logger;
+        $this->build();
     }
 
     /**
-     * @inheritdoc
+     * Saves the cart into storage.
+     *
+     * @param Cart $cart The cart to save.
+     * @return void
      */
-    public function saveCart(Cart $cart)
+    public function saveCart(Cart $cart): void
     {
         try {
-            $this->connector->set($cart, session_id());
+            $this->getConnector()->set(session_id(), $cart);
         } catch (Exception $e) {
-            $this->logger->error('Error');
+            $this->logger->error('Error saving cart: ' . $e->getMessage(), ['exception' => $e]);
         }
     }
 
     /**
-     * @return ?Cart
+     * Retrieves the cart from storage.
+     *
+     * @return ?Cart The cart if found, or a new cart instance otherwise.
      */
-    public function getCart()
+    public function getCart(): ?Cart
     {
         try {
-            return $this->connector->get(session_id());
+            return $this->getConnector()->get(session_id());
         } catch (Exception $e) {
-            $this->logger->error('Error');
+            $this->logger->error('Error retrieving cart: ' . $e->getMessage(), ['exception' => $e]);
+            return new Cart(session_id(), []);
         }
-
-        return new Cart(session_id(), []);
     }
 }

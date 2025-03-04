@@ -1,18 +1,38 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Raketa\BackendTestTask\Domain;
 
-final readonly class Customer
+final class Customer
 {
+    private int $id;
+    private string $firstName;
+    private string $lastName;
+    private string $middleName;
+    private string $email;
+
+    /**
+     * Customer constructor.
+     *
+     * @param int $id Unique identifier of the customer.
+     * @param string $firstName Customer's first name.
+     * @param string $lastName Customer's last name.
+     * @param string $middleName Customer's middle name.
+     * @param string $email Customer's email address.
+     */
     public function __construct(
-        private int $id,
-        private string $firstName,
-        private string $lastName,
-        private string $middleName,
-        private string $email,
+        int $id,
+        string $firstName,
+        string $lastName,
+        string $middleName,
+        string $email
     ) {
+        $this->id = $id;
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
+        $this->middleName = $middleName;
+        $this->email = $email;
     }
 
     public function getId(): int

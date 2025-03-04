@@ -1,60 +1,41 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Raketa\BackendTestTask\Infrastructure;
 
-class ConnectorException implements \Throwable
+use Throwable;
+
+class ConnectorException extends \Exception
 {
+    /**
+     * Overrides the default Exception constructor.
+     *
+     * @param string $message The exception message.
+     * @param int $code The exception code.
+     * @param Throwable|null $previous The previous throwable used for exception chaining.
+     */
     public function __construct(
-        private string $message,
-        private int $code,
-        private ?\Throwable $previous,
-    ) { }
-
-    public function getMessage(): string
-    {
-        return $this->message;
+        string $message,
+        int $code = 0,
+        ?Throwable $previous = null
+    ) {
+        parent::__construct($message, $code, $previous);
     }
 
-    public function getCode(): int
-    {
-        return $this->code;
-    }
-
-    public function getFile(): string
-    {
-        return $this->previous->getFile();
-    }
-
-    public function getLine(): int
-    {
-        return $this->previous->getLine();
-    }
-
-    public function getTrace(): array
-    {
-        return $this->previous->getTrace();
-    }
-
-    public function getTraceAsString(): string
-    {
-        return $this->previous->getTraceAsString();
-    }
-
-    public function getPrevious(): ?\Throwable
-    {
-        return $this->previous;
-    }
-
+    /**
+     * Provides a string representation of the exception.
+     *
+     * @return string The formatted exception string.
+     */
     public function __toString(): string
     {
         return sprintf(
-            '[%s] %s in %s on line %d',
+            '[%d] %s in %s on line %d',
             $this->getCode(),
             $this->getMessage(),
             $this->getFile(),
-            $this->getLine(),
+            $this->getLine()
         );
     }
 }

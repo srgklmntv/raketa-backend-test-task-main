@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Raketa\BackendTestTask\Infrastructure;
 
@@ -9,14 +9,21 @@ use RedisException;
 
 class ConnectorFacade
 {
-    public string $host;
-    public int $port = 6379;
-    public ?string $password = null;
-    public ?int $dbindex = null;
+    private string $host;
+    private int $port;
+    private ?string $password;
+    private ?int $dbindex;
+    private ?Connector $connector = null;
 
-    public $connector;
-
-    public function __construct($host, $port, $password, $dbindex)
+    /**
+     * ConnectorFacade constructor.
+     *
+     * @param string $host Redis server host.
+     * @param int $port Redis server port.
+     * @param ?string $password Redis authentication password.
+     * @param ?int $dbindex Redis database index.
+     */
+    public function __construct(string $host, int $port = 6379, ?string $password = null, ?int $dbindex = null)
     {
         $this->host = $host;
         $this->port = $port;
@@ -24,25 +31,42 @@ class ConnectorFacade
         $this->dbindex = $dbindex;
     }
 
-    protected function build(): void
+    /**
+     * Builds the Redis connection and initializes the Connector.
+     *
+     * @return void
+     * @throws RedisException If connection or authentication fails.
+     */
+    public function build(): void
     {
         $redis = new Redis();
 
         try {
-            $isConnected = $redis->isConnected();
-            if (! $isConnected && $redis->ping('Pong')) {
-                $isConnected = $redis->connect(
-                    $this->host,
-                    $this->port,
-                );
+            if (!$redis->isConnected()) {
+                $redis->connect($this->host, $this->port);
+                $redis->auth($this->password);
+                if ($this->dbindex !== null) {
+                    $redis->select($this->dbindex);
+                }
             }
-        } catch (RedisException) {
+
+            $this->connector = new Connector($redis);
+        } catch (RedisException $e) {
+            throw new RedisException('Failed to build Redis connection: ' . $e->getMessage(), $e->getCode(), $e);
+        }
+    }
+
+    /**
+     * Returns the initialized Connector instance.
+     *
+     * @return Connector The Redis Connector.
+     */
+    public function getConnector(): Connector
+    {
+        if ($this->connector === null) {
+            throw new RedisException('Connector has not been initialized. Call build() first.');
         }
 
-        if ($isConnected) {
-            $redis->auth($this->password);
-            $redis->select($this->dbindex);
-            $this->connector = new Connector($redis);
-        }
+        return $this->connector;
     }
 }
